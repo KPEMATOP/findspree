@@ -67,10 +67,12 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", inline: <<-SHELL
 
      sudo chmod +x /vagrant/bash/create_user.sh
-     sudo /vagrant/bash/create_user.sh findspree
-
+     sudo chmod +x /vagrant/bash/install_go.sh
+     sudo /vagrant/bash/create_user.sh game
+     sudo /vagrant/bash/install_go.sh
      	
      sudo cp /vagrant/configs/locale /etc/default/locale
+     sudo cp /vagrant/configs/etc/profile /etc/profile
      sudo cp -a /vagrant/configs/sources.list.d/. /etc/apt/sources.list.d/
      
      sudo locale-gen en_US.UTF-8
@@ -95,29 +97,28 @@ Vagrant.configure(2) do |config|
      sudo chown -R root:root  /etc/nginx/sites-available/
      sudo ln -s /etc/nginx/sites-available/* /etc/nginx/sites-enabled/
 
-     sudo -u postgres psql  template1 -c "ALTER USER postgres with encrypted password 'postgres';CREATE USER findspree WITH PASSWORD 'findspree';"
-     sudo -u postgres psql  template1 -c "CREATE DATABASE findspree WITH OWNER postgres ENCODING 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' TEMPLATE = template0;"
-     sudo -u postgres psql  template1 -c "GRANT ALL PRIVILEGES ON DATABASE findspree to findspree;"
+     sudo -u postgres psql  template1 -c "ALTER USER postgres with encrypted password 'postgres';CREATE USER game WITH PASSWORD 'game';"
+     sudo -u postgres psql  template1 -c "CREATE DATABASE game_main WITH OWNER postgres ENCODING 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' TEMPLATE = template0;"
+     sudo -u postgres psql  template1 -c "GRANT ALL PRIVILEGES ON DATABASE game_main to game;"
      sudo -u postgres psql  template1 -c "SET TIME ZONE 'UTC';"
 
      sudo service postgresql restart 
      sudo service php7.0-fpm restart
      sudo service nginx restart
 
-     sudo mkdir -p /home/findspree/.ssh
-     sudo chmod 700 /home/findspree/.ssh
-     sudo cp /vagrant/github_rsa /home/findspree/.ssh/id_rsa
-     sudo chmod 600 /home/findspree/.ssh/id_rsa
-     sudo chown -R findspree:findspree /home/findspree/.ssh
+     sudo mkdir -p /home/game/.ssh
+     sudo chmod 700 /home/game/.ssh
+     sudo cp /vagrant/github_rsa /home/game/.ssh/id_rsa
+     sudo chmod 600 /home/game/.ssh/id_rsa
+     sudo chown -R game:game /home/game/.ssh
 
      chown -R www-data:www-data /www
 
-     sudo -s -u findspree -- <<EOF
-        HOME=/home/findspree
+     sudo -s -u game -- <<EOF
+        HOME=/home/game
         ssh -oStrictHostKeyChecking=no git@github.com
 EOF
      echo "Finished"
    SHELL
-   config.vm.synced_folder "../api", "/www/api", owner: "www-data", group: "www-data"
-   config.vm.synced_folder "../web_client", "/www/web_client", owner: "www-data", group: "www-data"
+   config.vm.synced_folder "../app", "/www", owner: "www-data", group: "www-data"
 end
